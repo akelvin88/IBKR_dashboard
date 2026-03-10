@@ -56,7 +56,27 @@ def main():
     st.title("📊 IBKR Performance Dashboard")
     st.markdown("Since Inception Performance Analysis - MWR Basis")
     
+    # Initialize session state for theme
+    if 'theme' not in st.session_state:
+        st.session_state.theme = 'dark'
+    
     # Sidebar configuration
+    st.sidebar.header("⚙️ Settings")
+    
+    # Theme toggle
+    theme_choice = st.sidebar.radio("Theme", ["🌙 Dark", "☀️ Light"], 
+                                     index=0 if st.session_state.theme == 'dark' else 1)
+    st.session_state.theme = 'dark' if theme_choice.startswith('🌙') else 'light'
+    
+    # Apply theme dynamically
+    if st.session_state.theme == 'light':
+        st.markdown("""
+        <style>
+            [data-testid="stAppViewContainer"] {background-color: #ffffff;}
+            [data-testid="stSidebar"] {background-color: #f0f2f6;}
+        </style>
+        """, unsafe_allow_html=True)
+    
     st.sidebar.header("📁 Data Input")
     
     # File upload
@@ -263,18 +283,16 @@ def main():
         st.subheader("NAV Progression Over Time")
         
         if not nav_data.empty:
-            # Calculate cumulative deposits (approximated distribution across months)
+            # Get actual total deposits from stats
             total_deposits = stats.get('deposits', 0)
             num_months = len(nav_data)
             
-            # Distribute deposits across months (assuming even distribution after first deposit)
-            monthly_deposit = total_deposits / max(1, num_months)
+            # Calculate cumulative deposits assuming even distribution per month
             cumulative_deposits = []
-            running_total = 0
+            monthly_deposit = total_deposits / max(1, num_months)
             
             for idx in range(num_months):
-                running_total += monthly_deposit
-                cumulative_deposits.append(running_total)
+                cumulative_deposits.append((idx + 1) * monthly_deposit)
             
             fig = go.Figure()
             
@@ -293,7 +311,7 @@ def main():
                 x=nav_data['year_month'],
                 y=cumulative_deposits,
                 mode='lines',
-                name='Cumulative Deposits',
+                name=f'Cumulative Deposits (Total: ${total_deposits:,.2f})',
                 line=dict(color='#FF9999', width=2, dash='dash'),
                 yaxis='y2',
                 hovertemplate='%{x}<br>Cumulative Deposits: $%{y:,.2f}<extra></extra>'
