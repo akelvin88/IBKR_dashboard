@@ -263,23 +263,50 @@ def main():
         st.subheader("NAV Progression Over Time")
         
         if not nav_data.empty:
+            # Calculate cumulative deposits (approximated distribution across months)
+            total_deposits = stats.get('deposits', 0)
+            num_months = len(nav_data)
+            
+            # Distribute deposits across months (assuming even distribution after first deposit)
+            monthly_deposit = total_deposits / max(1, num_months)
+            cumulative_deposits = []
+            running_total = 0
+            
+            for idx in range(num_months):
+                running_total += monthly_deposit
+                cumulative_deposits.append(running_total)
+            
             fig = go.Figure()
             
+            # NAV trace (primary y-axis)
             fig.add_trace(go.Scatter(
                 x=nav_data['year_month'],
                 y=nav_data['ending_nav'],
                 mode='lines+markers',
-                fill='tozeroy',
-                name='Ending NAV',
+                name='Account NAV',
+                line=dict(color='#1f77b4', width=3),
                 hovertemplate='%{x}<br>NAV: $%{y:,.2f}<extra></extra>'
             ))
             
+            # Cumulative Deposits trace (secondary y-axis)
+            fig.add_trace(go.Scatter(
+                x=nav_data['year_month'],
+                y=cumulative_deposits,
+                mode='lines',
+                name='Cumulative Deposits',
+                line=dict(color='#FF9999', width=2, dash='dash'),
+                yaxis='y2',
+                hovertemplate='%{x}<br>Cumulative Deposits: $%{y:,.2f}<extra></extra>'
+            ))
+            
             fig.update_layout(
-                title="Account NAV Over Time",
+                title="Account NAV vs Cumulative Deposits Over Time",
                 xaxis_title="Month",
-                yaxis_title="NAV ($)",
+                yaxis=dict(title="NAV ($)", titlefont=dict(color='#1f77b4'), tickfont=dict(color='#1f77b4')),
+                yaxis2=dict(title="Cumulative Deposits ($)", titlefont=dict(color='#FF9999'), tickfont=dict(color='#FF9999'), overlaying='y', side='right'),
                 hovermode='x unified',
-                height=500
+                height=500,
+                legend=dict(x=0.01, y=0.99)
             )
             st.plotly_chart(fig, use_container_width=True)
             
