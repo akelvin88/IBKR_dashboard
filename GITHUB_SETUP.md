@@ -44,7 +44,7 @@ After creating the repo, GitHub will show you commands. Run:
 
 ```bash
 git branch -M main
-git remote add origin https://github.com/akelvin88/ibkr_dashboard.git
+git remote add origin https://github.com/akelvin88/IBKR_dashboard.git
 git push -u origin main
 ```
 
